@@ -1,12 +1,22 @@
 ﻿# Gauntlet History
 
+A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kills, deaths, prep/fight times, and detailed boss-fight performance — and exports them to a self-contained HTML report.
+
+## Screenshots
+
+### Plugin panel
+
+The side panel gives a quick overview of recent runs directly inside the RuneLite client.
+
 ![Plugin panel](doc/screenshot-panel.png)
 
-![HTML export – charts](doc/screenshot-export-charts.png)
+### HTML export
 
-![HTML export – table](doc/screenshot-export-table.png)
+Click **Export to HTML** for a full report in your browser — performance charts per variant with a 5-run moving average, and a sortable run table with per-run stats.
 
-A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kills, deaths, prep/fight times, and detailed boss-fight performance — and exports them to a self-contained HTML report.
+![HTML export – performance charts](doc/screenshot-export-charts.png)
+
+![HTML export – run table](doc/screenshot-export-table.png)
 
 ## Features
 
@@ -23,15 +33,13 @@ A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kill
 
 ## Plugin panel
 
-The side panel shows your last 50 sessions at a glance:
+The side panel shows your last 50 sessions at a glance. The stats bar at the top shows total sessions, kills, deaths, and your highest recorded KC.
 
 | Column | Description |
 |--------|-------------|
 | Date   | `MM-dd HH:mm` of run start |
 | Type   | Regular (blue) or Corrupted (purple) |
-| Result | Kill (green), Boss Death, Prep Death, or Left (grey) |
-
-The stats bar at the top shows total sessions, kills, deaths, and your highest recorded KC.
+| Result | Kill (green), Boss Death, Prep Death |
 
 ## Config options
 
@@ -88,8 +96,7 @@ Requires Java 11+. Set `JAVA_HOME` if Gradle cannot find your JDK.
 
 ## Acknowledgements
 
-- [**gauntlet-loot-popup**](https://github.com/ldavid432/gauntlet-loot-popup) by ldavid432 — referenced for RuneLite loot event handling patterns (`LootReceived`, `ServerNpcLoot`)
-- [**runelite-plugins**](https://github.com/Adam-/runelite-plugins) by Adam — referenced for loot tracker integration patterns
+- [**RLCGPerformanceTracker**](https://github.com/powerus117/RLCGPerformanceTracker) by powerus117 — the performance tracking metrics (tick efficiency, damage, prayer mistakes, etc.) are based on this plugin's work
 
 ## License
 
