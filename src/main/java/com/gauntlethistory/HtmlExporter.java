@@ -40,6 +40,13 @@ class HtmlExporter
 		boolean hasCorrupted = !corrupted.isEmpty();
 		boolean showTabs = hasRegular && hasCorrupted;
 
+		// Auto-select tab based on most recent run (sessions is newest-first)
+		String defaultTab = "all";
+		if (showTabs && !sessions.isEmpty())
+		{
+			defaultTab = sessions.get(0).corrupted ? "corrupted" : "regular";
+		}
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
 		sb.append("<meta charset=\"UTF-8\">\n");
@@ -58,7 +65,7 @@ class HtmlExporter
 			if (showTabs)
 			{
 				sb.append("<div class=\"tabs\">\n");
-				sb.append("<button id=\"tab-all\" class=\"tab active\" onclick=\"showTab('all')\">All</button>\n");
+				sb.append("<button id=\"tab-all\" class=\"tab\" onclick=\"showTab('all')\">All</button>\n");
 				sb.append("<button id=\"tab-regular\" class=\"tab\" onclick=\"showTab('regular')\">Regular</button>\n");
 				sb.append("<button id=\"tab-corrupted\" class=\"tab\" onclick=\"showTab('corrupted')\">Corrupted</button>\n");
 				sb.append("</div>\n");
@@ -74,6 +81,10 @@ class HtmlExporter
 				sb.append("<div id=\"section-corrupted\">\n");
 				section(sb, "Corrupted Gauntlet", "corrupted", corrupted);
 				sb.append("</div>\n");
+			}
+			if (showTabs)
+			{
+				sb.append("<script>showTab('").append(defaultTab).append("');</script>\n");
 			}
 		}
 
@@ -576,54 +587,54 @@ class HtmlExporter
 	private static String css()
 	{
 		return "* { box-sizing: border-box; margin: 0; padding: 0; }\n"
-			+ "body { background: #1a1a1a; color: #c8c8c8; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; }\n"
-			+ "h1 { color: #c8a04a; font-size: 22px; margin-bottom: 20px; }\n"
-			+ "h2 { color: #c8a04a; font-size: 16px; margin: 28px 0 12px; border-bottom: 1px solid #3a3a3a; padding-bottom: 6px; }\n"
+			+ "body { background: #f0f2f5; color: #222; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; }\n"
+			+ "h1 { color: #7a5200; font-size: 22px; margin-bottom: 20px; }\n"
+			+ "h2 { color: #7a5200; font-size: 16px; margin: 28px 0 12px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }\n"
 			+ ".tabs { display: flex; gap: 8px; margin-bottom: 8px; }\n"
-			+ ".tab { padding: 6px 18px; background: #252525; border: 1px solid #3a3a3a; border-radius: 4px; color: #888; cursor: pointer; font-size: 13px; font-family: inherit; }\n"
-			+ ".tab.active { background: #2e2e2e; color: #c8a04a; border-color: #c8a04a; }\n"
-			+ ".tab:hover:not(.active) { background: #2a2a2a; color: #aaa; }\n"
+			+ ".tab { padding: 6px 18px; background: #fff; border: 1px solid #ccc; border-radius: 4px; color: #666; cursor: pointer; font-size: 13px; font-family: inherit; }\n"
+			+ ".tab.active { background: #fff; color: #7a5200; border-color: #7a5200; font-weight: bold; }\n"
+			+ ".tab:hover:not(.active) { background: #f5f5f5; color: #444; }\n"
 			+ ".summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }\n"
-			+ ".stat-card { background: #252525; border: 1px solid #3a3a3a; border-radius: 4px; padding: 10px 18px; min-width: 110px; }\n"
-			+ ".stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }\n"
-			+ ".stat-value { font-size: 22px; color: #c8a04a; font-weight: bold; }\n"
+			+ ".stat-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 10px 18px; min-width: 110px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }\n"
+			+ ".stat-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }\n"
+			+ ".stat-value { font-size: 22px; color: #7a5200; font-weight: bold; }\n"
 			// Charts
 			+ ".charts-details { margin-bottom: 24px; }\n"
-			+ ".charts-summary { color: #c8a04a; cursor: pointer; font-size: 14px; font-weight: bold; padding: 6px 2px; user-select: none; list-style: none; }\n"
+			+ ".charts-summary { color: #7a5200; cursor: pointer; font-size: 14px; font-weight: bold; padding: 6px 2px; user-select: none; list-style: none; }\n"
 			+ ".charts-summary::-webkit-details-marker { display: none; }\n"
 			+ ".charts-summary::before { content: '\\25B8  '; }\n"
 			+ "details[open] .charts-summary::before { content: '\\25BE  '; }\n"
 			+ ".charts-controls { display: flex; justify-content: flex-end; margin: 8px 0 4px; }\n"
-			+ ".ma-toggle { padding: 4px 12px; background: #252525; border: 1px solid #3a3a3a; border-radius: 4px; color: #c8a04a; cursor: pointer; font-size: 12px; font-family: inherit; }\n"
-			+ ".ma-toggle:hover { background: #2e2e2e; }\n"
+			+ ".ma-toggle { padding: 4px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; color: #7a5200; cursor: pointer; font-size: 12px; font-family: inherit; }\n"
+			+ ".ma-toggle:hover { background: #f5f5f5; }\n"
 			+ ".charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }\n"
-			+ ".chart-card { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 4px; padding: 10px 10px 6px; }\n"
-			+ ".chart-title { font-size: 12px; font-weight: bold; color: #c8c8c8; letter-spacing: 0.3px; margin-bottom: 6px; }\n"
+			+ ".chart-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 10px 6px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }\n"
+			+ ".chart-title { font-size: 12px; font-weight: bold; color: #555; letter-spacing: 0.3px; margin-bottom: 6px; }\n"
 			+ ".chart-card canvas { width: 100%; height: auto; display: block; }\n"
-			+ ".chart-tooltip { position: fixed; background: #2a2a2a; border: 1px solid #c8a04a; color: #c8c8c8; padding: 3px 8px; font-size: 11px; pointer-events: none; display: none; border-radius: 3px; z-index: 100; }\n"
+			+ ".chart-tooltip { position: fixed; background: #fff; border: 1px solid #7a5200; color: #333; padding: 3px 8px; font-size: 11px; pointer-events: none; display: none; border-radius: 3px; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,.15); }\n"
 			// Table
-			+ "table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }\n"
-			+ "th { background: #252525; color: #c8a04a; padding: 8px 10px; text-align: left; border-bottom: 2px solid #3a3a3a; white-space: nowrap; }\n"
+			+ "table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }\n"
+			+ "th { background: #f7f7f7; color: #7a5200; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }\n"
 			+ "th.sortable { cursor: pointer; user-select: none; }\n"
-			+ "th.sortable:hover { background: #2e2e2e; }\n"
+			+ "th.sortable:hover { background: #efefef; }\n"
 			+ "th.sort-asc::after { content: '  \\25B2'; font-size: 9px; }\n"
 			+ "th.sort-desc::after { content: '  \\25BC'; font-size: 9px; }\n"
-			+ "tr:nth-child(even) { background: #1e1e1e; }\n"
-			+ "tr:nth-child(odd) { background: #1a1a1a; }\n"
-			+ "td { padding: 7px 10px; border-bottom: 1px solid #282828; vertical-align: top; }\n"
-			+ ".kill { color: #5af542; font-weight: bold; }\n"
-			+ ".death { color: #f55142; font-weight: bold; }\n"
-			+ ".incomplete { color: #888; }\n"
-				+ ".perf { font-size: 11px; color: #aaa; }\n"
+			+ "tr:nth-child(even) { background: #fafafa; }\n"
+			+ "tr:nth-child(odd) { background: #fff; }\n"
+			+ "td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }\n"
+			+ ".kill { color: #1a7a1a; font-weight: bold; }\n"
+			+ ".death { color: #b22222; font-weight: bold; }\n"
+			+ ".incomplete { color: #999; }\n"
+			+ ".perf { font-size: 11px; color: #666; }\n"
 			+ ".perf-inner { border-collapse: collapse; font-size: 11px; width: 100%; }\n"
-			+ ".perf-inner td { padding: 1px 4px; border: none; color: #aaa; background: transparent; }\n"
-			+ ".perf-inner td:last-child { text-align: right; color: #c8c8c8; }\n"
+			+ ".perf-inner td { padding: 1px 4px; border: none; color: #777; background: transparent; }\n"
+			+ ".perf-inner td:last-child { text-align: right; color: #333; }\n"
 			// Pagination
 			+ ".pagination { display: none; align-items: center; gap: 12px; margin: 8px 0 20px; }\n"
-			+ ".pagination button { padding: 4px 12px; background: #252525; border: 1px solid #3a3a3a; border-radius: 4px; color: #c8a04a; cursor: pointer; font-size: 12px; font-family: inherit; }\n"
-			+ ".pagination button:hover { background: #2e2e2e; }\n"
-			+ ".pagination span { color: #888; font-size: 12px; }\n"
-			+ ".empty { color: #888; padding: 20px 0; }\n"
-			+ ".footer { color: #555; font-size: 11px; margin-top: 16px; }\n";
+			+ ".pagination button { padding: 4px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; color: #7a5200; cursor: pointer; font-size: 12px; font-family: inherit; }\n"
+			+ ".pagination button:hover { background: #f5f5f5; }\n"
+			+ ".pagination span { color: #999; font-size: 12px; }\n"
+			+ ".empty { color: #999; padding: 20px 0; }\n"
+			+ ".footer { color: #bbb; font-size: 11px; margin-top: 16px; }\n";
 	}
 }

@@ -1,12 +1,11 @@
 ﻿# Gauntlet History
 
-A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kills, deaths, loot, prep/fight times, and detailed boss-fight performance — and exports them to a self-contained HTML report.
+A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kills, deaths, prep/fight times, and detailed boss-fight performance — and exports them to a self-contained HTML report.
 
 ## Features
 
 - **Session tracking** — automatically records each run from the moment you enter the Gauntlet to when you leave
 - **Accurate times** — sourced from the game's own completion messages (`Preparation time: 2:59.4. Hunllef kill time: 3:10.8.`), not wall-clock estimates
-- **Loot recording** — captures all chest drops via the in-game "received a drop" messages
 - **Performance metrics** — tick efficiency, damage taken/given, wrong offensive/defensive prayers, wrong attack style, tornado hits, stomp hits, and more
 - **Persistent history** — sessions survive client restarts; stored in `~/.runelite/gauntlet-history/sessions.json`
 - **HTML export** — one-click (or automatic) export to a fully offline, self-contained HTML report with:
@@ -80,6 +79,11 @@ See [SESSION_FORMAT.md](SESSION_FORMAT.md) for a full description of the JSON sc
 ```
 
 Requires Java 11+. Set `JAVA_HOME` if Gradle cannot find your JDK.
+
+## Acknowledgements
+
+- [**gauntlet-loot-popup**](https://github.com/ldavid432/gauntlet-loot-popup) by ldavid432 — referenced for RuneLite loot event handling patterns (`LootReceived`, `ServerNpcLoot`)
+- [**runelite-plugins**](https://github.com/Adam-/runelite-plugins) by Adam — referenced for loot tracker integration patterns
 
 ## License
 
