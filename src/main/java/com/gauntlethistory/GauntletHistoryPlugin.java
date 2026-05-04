@@ -23,17 +23,19 @@ import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.NpcID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemStack;
 import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.NpcLootReceived;
-import net.runelite.client.game.ItemManager;
-import net.runelite.client.game.ItemStack;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.Text;
+import net.runelite.http.api.loottracker.LootRecordType;
 
 @Slf4j
 @PluginDescriptor(
@@ -60,8 +62,10 @@ public class GauntletHistoryPlugin extends Plugin
 		NpcID.CRYSTAL_HUNLLEF_CRYSTALS_HM
 	);
 
+	// Regular: "Your Gauntlet kill count is: 15."
+	// Corrupted: "Your Corrupted Gauntlet completion count is: 217."
 	private static final Pattern KC_PATTERN =
-		Pattern.compile("Your (?:Corrupted )?Gauntlet kill count is: (\\d+)\\.", Pattern.CASE_INSENSITIVE);
+		Pattern.compile("Your (?:Corrupted )?Gauntlet (?:kill|completion) count is: (\\d+)\\.", Pattern.CASE_INSENSITIVE);
 
 	// "Challenge duration: 6:10.20 (new personal best)." or without the suffix
 	private static final Pattern DURATION_PATTERN =
@@ -71,10 +75,6 @@ public class GauntletHistoryPlugin extends Plugin
 	private static final Pattern PREP_FIGHT_PATTERN =
 		Pattern.compile("Preparation time: (\\d+):(\\d+\\.\\d+)\\. Hunllef kill time: (\\d+):(\\d+\\.\\d+)\\.",
 			Pattern.CASE_INSENSITIVE);
-
-	// "PlayerName received a drop: 440 x Adamant arrow"
-	private static final Pattern LOOT_PATTERN =
-		Pattern.compile("(.+) received a drop: (?:(\\d+) x )?(.+)", Pattern.CASE_INSENSITIVE);
 
 	static final File HISTORY_DIR = new File(RuneLite.RUNELITE_DIR, "gauntlet-history");
 
@@ -272,22 +272,6 @@ public class GauntletHistoryPlugin extends Plugin
 	// Kill / loot / death / KC
 	// -------------------------------------------------------------------------
 
-	@Subscribe
-	public void onNpcLootReceived(NpcLootReceived event)
-	{
-		GauntletSession current = sessionManager.current();
-		if (!HUNLLEF_IDS.contains(event.getNpc().getId()) || current == null)
-		{
-			return;
-		}
-		current.killedBoss = true;
-		for (ItemStack item : event.getItems())
-		{
-			String name = itemManager.getItemComposition(item.getId()).getName();
-			current.loot.add(new GauntletSession.LootItem(item.getId(), name, item.getQuantity()));
-		}
-		log.debug("Received {} loot items from Hunllef", event.getItems().size());
-	}
 
 	@Subscribe
 	public void onActorDeath(ActorDeath event)
@@ -309,9 +293,31 @@ public class GauntletHistoryPlugin extends Plugin
 			}
 			log.debug("Player died (bossPhase={})", inBossFight);
 		}
-		else if (HUNLLEF_IDS.contains(((NPC) event.getActor()).getId()))
+		else if (event.getActor() instanceof NPC
+			&& HUNLLEF_IDS.contains(((NPC) event.getActor()).getId()))
 		{
 			current.killedBoss = true;
+			log.debug("Boss killed");
+		}
+	}
+
+	@Subscribe
+	public void onLootReceived(LootReceived event)
+	{
+		GauntletSession current = sessionManager.current();
+		if (current == null || !inGauntlet)
+		{
+			return;
+		}
+		if (event.getType() != LootRecordType.EVENT)
+		{
+			return;
+		}
+		for (ItemStack item : event.getItems())
+		{
+			String name = itemManager.getItemComposition(item.getId()).getName();
+			current.loot.add(new GauntletSession.LootItem(item.getId(), name, item.getQuantity()));
+			log.debug("Loot: {} x {}", item.getQuantity(), name);
 		}
 	}
 
@@ -324,7 +330,9 @@ public class GauntletHistoryPlugin extends Plugin
 			return;
 		}
 
-		final String msg = event.getMessage();
+		// Strip color/link tags — raw messages contain e.g. <col=ff>text</col>
+		// which breaks digit-based regex patterns and player-name comparisons.
+		final String msg = Text.removeTags(event.getMessage());
 
 		Matcher kc = KC_PATTERN.matcher(msg);
 		if (kc.find())
@@ -348,18 +356,6 @@ public class GauntletHistoryPlugin extends Plugin
 			log.debug("Prep: {}ms  Fight: {}ms", current.prepTimeMs, current.fightTimeMs);
 		}
 
-		Matcher loot = LOOT_PATTERN.matcher(msg);
-		if (loot.find() && inGauntlet)
-		{
-			String localName = client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : null;
-			if (localName != null && localName.equals(loot.group(1)))
-			{
-				int qty = loot.group(2) != null ? Integer.parseInt(loot.group(2)) : 1;
-				String itemName = loot.group(3);
-				current.loot.add(new GauntletSession.LootItem(-1, itemName, qty));
-				log.debug("Loot: {} x {}", qty, itemName);
-			}
-		}
 	}
 
 	private static long parseTimeMs(String minutes, String seconds)
