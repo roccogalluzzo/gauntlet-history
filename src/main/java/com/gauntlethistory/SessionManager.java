@@ -40,7 +40,9 @@ class SessionManager
 
 	List<GauntletSession> getSessions()
 	{
-		return sessions;
+		return sessions.stream()
+			.filter(s -> s.killedBoss || s.diedInBoss || s.diedInPrep)
+			.collect(java.util.stream.Collectors.toList());
 	}
 
 	/**
@@ -94,7 +96,7 @@ class SessionManager
 
 	void exportHtml() throws IOException
 	{
-		HtmlExporter.export(new ArrayList<>(sessions), GauntletHistoryPlugin.HISTORY_DIR);
+		HtmlExporter.export(getSessions(), GauntletHistoryPlugin.HISTORY_DIR);
 	}
 
 	/** Loads sessions from disk asynchronously, calling {@code onLoaded} on the EDT when done. */
