@@ -1,5 +1,7 @@
 ﻿# Gauntlet History
 
+![Plugin panel](doc/screenshot-panel.png) &nbsp; ![HTML export](doc/screenshot-export.png)
+
 A RuneLite plugin that tracks every Gauntlet and Corrupted Gauntlet run — kills, deaths, prep/fight times, and detailed boss-fight performance — and exports them to a self-contained HTML report.
 
 ## Features

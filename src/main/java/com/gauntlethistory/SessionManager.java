@@ -110,6 +110,12 @@ class SessionManager
 		});
 	}
 
+	/** Clears the current session without persisting it. */
+	void discardSession()
+	{
+		current = null;
+	}
+
 	void shutdown()
 	{
 		executor.shutdownNow();

@@ -352,9 +352,22 @@ public class GauntletHistoryPlugin extends Plugin
 
 	private void finishCurrentSession()
 	{
-		// Snapshot perf if the boss-ended varbit didn't fire (e.g. logout mid-fight)
 		GauntletSession current = sessionManager.current();
-		if (current != null && current.perf == null && inBossFight)
+		if (current == null)
+		{
+			return;
+		}
+
+		// Discard runs with no meaningful outcome (entered and left without a kill or death)
+		if (!current.killedBoss && !current.diedInBoss && !current.diedInPrep)
+		{
+			log.debug("Discarding incomplete session (no kill or death)");
+			sessionManager.discardSession();
+			return;
+		}
+
+		// Snapshot perf if the boss-ended varbit didn't fire (e.g. logout mid-fight)
+		if (current.perf == null && inBossFight)
 		{
 			current.perf = performanceTracker.endBossFight();
 		}
