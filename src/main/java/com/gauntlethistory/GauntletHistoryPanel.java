@@ -21,6 +21,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.util.LinkBrowser;
 
 class GauntletHistoryPanel extends PluginPanel
 {
@@ -182,9 +183,7 @@ class GauntletHistoryPanel extends PluginPanel
 		try
 		{
 			plugin.exportHtml();
-			JOptionPane.showMessageDialog(this,
-				"Exported to:\n" + GauntletHistoryPlugin.HISTORY_DIR + "\\export.html",
-				"Export Complete", JOptionPane.INFORMATION_MESSAGE);
+			LinkBrowser.browse(new java.io.File(GauntletHistoryPlugin.HISTORY_DIR, "export.html").toURI().toString());
 		}
 		catch (IOException e)
 		{
