@@ -70,6 +70,7 @@ class GauntletHistoryPanel extends PluginPanel
 		scrollPane.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
 		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 		scrollPane.setPreferredSize(new Dimension(0, 400));
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 		JPanel centerPanel = new JPanel(new BorderLayout(0, 6));
 		centerPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -105,10 +106,10 @@ class GauntletHistoryPanel extends PluginPanel
 
 		// Column headers
 		JPanel header = rowPanel(true);
-		header.add(colLabel("Date", 90, true));
-		header.add(colLabel("Type", 70, true));
-		header.add(colLabel("Result", 80, true));
-		header.add(colLabel("KC", 30, true));
+		header.add(colLabel("Date", true));
+		header.add(colLabel("Type", true));
+		header.add(colLabel("Result", true));
+		header.add(colLabel("KC", true));
 		sessionListPanel.add(header);
 
 		int shown = Math.min(sessions.size(), 50);
@@ -118,9 +119,9 @@ class GauntletHistoryPanel extends PluginPanel
 			JPanel row = rowPanel(i % 2 == 0);
 
 			String dateStr = s.startTime != null ? DATE_FMT.format(s.startTime) : "—";
-			row.add(colLabel(dateStr, 90, false));
+			row.add(colLabel(dateStr, false));
 
-			JLabel typeLabel = colLabel(s.corrupted ? "Corrupt" : "Regular", 70, false);
+			JLabel typeLabel = colLabel(s.corrupted ? "Corrupt" : "Regular", false);
 			typeLabel.setForeground(s.corrupted ? CORRUPTED_COLOR : NORMAL_COLOR);
 			row.add(typeLabel);
 
@@ -146,11 +147,11 @@ class GauntletHistoryPanel extends PluginPanel
 				result = "Left";
 				resultColor = ColorScheme.LIGHT_GRAY_COLOR;
 			}
-			JLabel resultLabel = colLabel(result, 80, false);
+			JLabel resultLabel = colLabel(result, false);
 			resultLabel.setForeground(resultColor);
 			row.add(resultLabel);
 
-			row.add(colLabel(s.killCount > 0 ? String.valueOf(s.killCount) : "—", 30, false));
+			row.add(colLabel(s.killCount > 0 ? String.valueOf(s.killCount) : "—", false));
 
 			sessionListPanel.add(row);
 		}
@@ -169,12 +170,11 @@ class GauntletHistoryPanel extends PluginPanel
 		return row;
 	}
 
-	private JLabel colLabel(String text, int width, boolean header)
+	private JLabel colLabel(String text, boolean header)
 	{
 		JLabel label = new JLabel(text);
 		label.setFont(label.getFont().deriveFont(header ? Font.BOLD : Font.PLAIN, 11f));
 		label.setForeground(header ? GOLD_COLOR : ColorScheme.LIGHT_GRAY_COLOR);
-		label.setPreferredSize(new Dimension(width, 18));
 		return label;
 	}
 
