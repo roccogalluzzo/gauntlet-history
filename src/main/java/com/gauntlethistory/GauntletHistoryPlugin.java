@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -31,11 +32,11 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.events.ServerNpcLoot;
 import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.Text;
-import net.runelite.http.api.loottracker.LootRecordType;
 
 @Slf4j
 @PluginDescriptor(
@@ -309,11 +310,28 @@ public class GauntletHistoryPlugin extends Plugin
 		{
 			return;
 		}
-		if (event.getType() != LootRecordType.EVENT)
+		recordLoot(event.getItems());
+	}
+
+	@Subscribe
+	public void onServerNpcLoot(ServerNpcLoot event)
+	{
+		GauntletSession current = sessionManager.current();
+		if (current == null || !inGauntlet)
 		{
 			return;
 		}
-		for (ItemStack item : event.getItems())
+		recordLoot(event.getItems());
+	}
+
+	private void recordLoot(Collection<ItemStack> items)
+	{
+		GauntletSession current = sessionManager.current();
+		if (current == null)
+		{
+			return;
+		}
+		for (ItemStack item : items)
 		{
 			String name = itemManager.getItemComposition(item.getId()).getName();
 			current.loot.add(new GauntletSession.LootItem(item.getId(), name, item.getQuantity()));
