@@ -14,6 +14,10 @@ public class GauntletSession
 	public boolean diedInPrep;
 	public boolean diedInBoss;
 	public int killCount = -1;
+	/** Game-reported times in milliseconds; -1 when not available. */
+	public long prepTimeMs = -1;
+	public long fightTimeMs = -1;
+	public long totalTimeMs = -1;
 	public List<LootItem> loot = new ArrayList<>();
 	public PerformanceData perf;
 

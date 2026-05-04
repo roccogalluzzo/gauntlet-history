@@ -125,7 +125,8 @@ class HtmlExporter
 		}
 
 		List<GauntletSession> withFight = chrono.stream()
-			.filter(s -> s.bossStartTime != null && s.endTime != null).collect(Collectors.toList());
+			.filter(s -> s.fightTimeMs >= 0 || (s.bossStartTime != null && s.endTime != null))
+			.collect(Collectors.toList());
 		if (withFight.size() > MAX_CHART_POINTS)
 		{
 			withFight = withFight.subList(withFight.size() - MAX_CHART_POINTS, withFight.size());
@@ -175,10 +176,15 @@ class HtmlExporter
 		}
 		if (!withFight.isEmpty())
 		{
+			// Use ms precision; chart value = seconds (with decimal), label formatted as M:SS
 			drawCall(sb, prefix + "-fight-time", withFight,
-				s -> String.valueOf(Duration.between(s.bossStartTime, s.endTime).getSeconds()),
+				s -> {
+					long ms = s.fightTimeMs >= 0 ? s.fightTimeMs
+						: Duration.between(s.bossStartTime, s.endTime).toMillis();
+					return String.format("%.1f", ms / 1000.0);
+				},
 				"'#5ab8f5'", "null", "null",
-				"function(v){return Math.floor(v/60)+':'+(('0'+(v%60)).slice(-2));}");
+				"function(v){return Math.floor(v/60)+':'+(('0'+Math.floor(v%60)).slice(-2));}");
 		}
 
 		sb.append("</script>\n");
@@ -288,17 +294,21 @@ class HtmlExporter
 			tdNum(sb, s.killCount > 0 ? s.killCount : Long.MIN_VALUE,
 				s.killCount > 0 ? String.valueOf(s.killCount) : "—");
 
-			// Prep / Fight / Total time (data-val = seconds, empty if unavailable)
-			long prepSec = (s.startTime != null && s.bossStartTime != null)
-				? Duration.between(s.startTime, s.bossStartTime).getSeconds() : Long.MIN_VALUE;
-			long fightSec = (s.bossStartTime != null && s.endTime != null)
-				? Duration.between(s.bossStartTime, s.endTime).getSeconds() : Long.MIN_VALUE;
-			long totalSec = (s.startTime != null && s.endTime != null)
-				? Duration.between(s.startTime, s.endTime).getSeconds() : Long.MIN_VALUE;
+			// Prep / Fight / Total time — prefer game-reported ms; fall back to wall-clock
+			long prepMs = s.prepTimeMs >= 0 ? s.prepTimeMs
+				: (s.startTime != null && s.bossStartTime != null
+					? Duration.between(s.startTime, s.bossStartTime).toMillis() : Long.MIN_VALUE);
+			long fightMs = s.fightTimeMs >= 0 ? s.fightTimeMs
+				: (s.bossStartTime != null && s.endTime != null
+					? Duration.between(s.bossStartTime, s.endTime).toMillis() : Long.MIN_VALUE);
+			long totalMs = s.totalTimeMs >= 0 ? s.totalTimeMs
+				: (s.startTime != null && s.endTime != null
+					? Duration.between(s.startTime, s.endTime).toMillis() : Long.MIN_VALUE);
 
-			tdNum(sb, prepSec, formatDuration(s.startTime, s.bossStartTime));
-			tdNum(sb, fightSec, formatDuration(s.bossStartTime, s.endTime));
-			tdNum(sb, totalSec, formatDuration(s.startTime, s.endTime));
+			// data-val = total milliseconds for sorting
+			tdNum(sb, prepMs, formatMs(prepMs));
+			tdNum(sb, fightMs, formatMs(fightMs));
+			tdNum(sb, totalMs, formatMs(totalMs));
 
 			// Loot
 			sb.append("<td class=\"loot\">");
@@ -380,14 +390,16 @@ class HtmlExporter
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	private static String formatDuration(Instant from, Instant to)
+	/** Format milliseconds as M:SS.s (one decimal), e.g. 2:59.4 — or "—" if ms < 0. */
+	private static String formatMs(long ms)
 	{
-		if (from == null || to == null)
+		if (ms < 0)
 		{
 			return "—";
 		}
-		Duration d = Duration.between(from, to);
-		return String.format("%d:%02d", d.toMinutes(), d.getSeconds() % 60);
+		long secs = ms / 1000;
+		int tenths = (int) ((ms % 1000) / 100);
+		return String.format("%d:%02d.%d", secs / 60, secs % 60, tenths);
 	}
 
 	private static void stat(StringBuilder sb, String label, String value)

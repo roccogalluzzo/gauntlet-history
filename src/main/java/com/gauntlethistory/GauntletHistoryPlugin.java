@@ -63,6 +63,19 @@ public class GauntletHistoryPlugin extends Plugin
 	private static final Pattern KC_PATTERN =
 		Pattern.compile("Your (?:Corrupted )?Gauntlet kill count is: (\\d+)\\.", Pattern.CASE_INSENSITIVE);
 
+	// "Challenge duration: 6:10.20 (new personal best)." or without the suffix
+	private static final Pattern DURATION_PATTERN =
+		Pattern.compile("Challenge duration: (\\d+):(\\d+\\.\\d+)", Pattern.CASE_INSENSITIVE);
+
+	// "Preparation time: 2:59.40. Hunllef kill time: 3:10.80."
+	private static final Pattern PREP_FIGHT_PATTERN =
+		Pattern.compile("Preparation time: (\\d+):(\\d+\\.\\d+)\\. Hunllef kill time: (\\d+):(\\d+\\.\\d+)\\.",
+			Pattern.CASE_INSENSITIVE);
+
+	// "PlayerName received a drop: 440 x Adamant arrow"
+	private static final Pattern LOOT_PATTERN =
+		Pattern.compile("(.+) received a drop: (?:(\\d+) x )?(.+)", Pattern.CASE_INSENSITIVE);
+
 	static final File HISTORY_DIR = new File(RuneLite.RUNELITE_DIR, "gauntlet-history");
 
 	@Inject private Client client;
@@ -310,12 +323,48 @@ public class GauntletHistoryPlugin extends Plugin
 		{
 			return;
 		}
-		Matcher m = KC_PATTERN.matcher(event.getMessage());
-		if (m.find())
+
+		final String msg = event.getMessage();
+
+		Matcher kc = KC_PATTERN.matcher(msg);
+		if (kc.find())
 		{
-			current.killCount = Integer.parseInt(m.group(1));
+			current.killCount = Integer.parseInt(kc.group(1));
 			log.debug("KC detected: {}", current.killCount);
 		}
+
+		Matcher dur = DURATION_PATTERN.matcher(msg);
+		if (dur.find())
+		{
+			current.totalTimeMs = parseTimeMs(dur.group(1), dur.group(2));
+			log.debug("Total time: {}ms", current.totalTimeMs);
+		}
+
+		Matcher pf = PREP_FIGHT_PATTERN.matcher(msg);
+		if (pf.find())
+		{
+			current.prepTimeMs = parseTimeMs(pf.group(1), pf.group(2));
+			current.fightTimeMs = parseTimeMs(pf.group(3), pf.group(4));
+			log.debug("Prep: {}ms  Fight: {}ms", current.prepTimeMs, current.fightTimeMs);
+		}
+
+		Matcher loot = LOOT_PATTERN.matcher(msg);
+		if (loot.find() && inGauntlet)
+		{
+			String localName = client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : null;
+			if (localName != null && localName.equals(loot.group(1)))
+			{
+				int qty = loot.group(2) != null ? Integer.parseInt(loot.group(2)) : 1;
+				String itemName = loot.group(3);
+				current.loot.add(new GauntletSession.LootItem(-1, itemName, qty));
+				log.debug("Loot: {} x {}", qty, itemName);
+			}
+		}
+	}
+
+	private static long parseTimeMs(String minutes, String seconds)
+	{
+		return Long.parseLong(minutes) * 60_000L + Math.round(Double.parseDouble(seconds) * 1000);
 	}
 
 	// -------------------------------------------------------------------------
