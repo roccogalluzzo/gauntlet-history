@@ -87,7 +87,7 @@ class GauntletHistoryPanel extends PluginPanel
 
 	void refresh()
 	{
-		List<GauntletSession> sessions = plugin.sessions;
+		List<GauntletSession> sessions = plugin.getSessions();
 
 		long kills = sessions.stream().filter(s -> s.killedBoss).count();
 		long deaths = sessions.stream().filter(s -> s.diedInBoss || s.diedInPrep).count();
