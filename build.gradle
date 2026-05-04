@@ -14,7 +14,7 @@ repositories {
 }
 
 def runeLiteVersion = 'latest.release'
-def pluginMainClass = 'com.gauntlethistory.GauntletHistoryPluginTest'
+def pluginMainClass = 'net.runelite.client.RuneLite'
 
 dependencies {
 	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
