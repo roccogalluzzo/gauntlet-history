@@ -305,9 +305,18 @@ public class GauntletHistoryPlugin extends Plugin
 	@Subscribe
 	public void onLootReceived(LootReceived event)
 	{
+		log.debug("LootReceived: name='{}' type={} items={}", event.getName(), event.getType(), event.getItems().size());
 		GauntletSession current = sessionManager.current();
 		if (current == null || !inGauntlet)
 		{
+			return;
+		}
+		// Only capture the chest itself — the loot tracker fires this with the
+		// event name "Gauntlet" (regular) or "Corrupted Gauntlet" (HM).
+		String name = event.getName() != null ? event.getName() : "";
+		if (!name.equals("Gauntlet") && !name.equals("Corrupted Gauntlet"))
+		{
+			log.debug("LootReceived ignored (not Gauntlet chest): '{}'", name);
 			return;
 		}
 		recordLoot(event.getItems());
@@ -316,8 +325,22 @@ public class GauntletHistoryPlugin extends Plugin
 	@Subscribe
 	public void onServerNpcLoot(ServerNpcLoot event)
 	{
+		String npcName = event.getComposition() != null ? event.getComposition().getName() : "<null>";
+		log.debug("ServerNpcLoot: npc='{}' items={}", npcName, event.getItems().size());
+		// ServerNpcLoot fires for prep-phase NPC drops — ignore those.
+		// We only want this if the source is Hunllef (boss chest fallback).
+		if (event.getComposition() == null || event.getComposition().getName() == null)
+		{
+			return;
+		}
 		GauntletSession current = sessionManager.current();
-		if (current == null || !inGauntlet)
+		if (current == null || !inBossFight)
+		{
+			return;
+		}
+		// Only accept loot attributed to Hunllef itself
+		String npc = event.getComposition().getName();
+		if (!npc.contains("Hunllef"))
 		{
 			return;
 		}
@@ -335,7 +358,7 @@ public class GauntletHistoryPlugin extends Plugin
 		{
 			String name = itemManager.getItemComposition(item.getId()).getName();
 			current.loot.add(new GauntletSession.LootItem(item.getId(), name, item.getQuantity()));
-			log.debug("Loot: {} x {}", item.getQuantity(), name);
+			log.debug("Loot recorded: {} x {}", item.getQuantity(), name);
 		}
 	}
 
