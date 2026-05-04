@@ -1,8 +1,6 @@
 package com.gauntlethistory;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GauntletSession
 {
@@ -18,7 +16,6 @@ public class GauntletSession
 	public long prepTimeMs = -1;
 	public long fightTimeMs = -1;
 	public long totalTimeMs = -1;
-	public List<LootItem> loot = new ArrayList<>();
 	public PerformanceData perf;
 
 	public GauntletSession(Instant startTime)
@@ -29,19 +26,5 @@ public class GauntletSession
 	// Default constructor for Gson
 	public GauntletSession()
 	{
-	}
-
-	public static class LootItem
-	{
-		public final int id;
-		public final String name;
-		public final int quantity;
-
-		public LootItem(int id, String name, int quantity)
-		{
-			this.id = id;
-			this.name = name;
-			this.quantity = quantity;
-		}
 	}
 }

@@ -5,7 +5,6 @@ import com.google.inject.Provides;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -24,16 +23,12 @@ import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.NpcID;
 import net.runelite.api.gameval.VarbitID;
-import net.runelite.client.game.ItemManager;
-import net.runelite.client.game.ItemStack;
 import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.events.ServerNpcLoot;
-import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.Text;
@@ -41,8 +36,8 @@ import net.runelite.client.util.Text;
 @Slf4j
 @PluginDescriptor(
 	name = "Gauntlet History",
-	description = "Tracks KC, deaths, loot, and performance stats for the Gauntlet boss.",
-	tags = {"gauntlet", "corrupted", "hunllef", "history", "kc", "loot", "performance"}
+	description = "Tracks KC, deaths, and performance stats for the Gauntlet boss.",
+	tags = {"gauntlet", "corrupted", "hunllef", "history", "kc", "performance"}
 )
 public class GauntletHistoryPlugin extends Plugin
 {
@@ -81,7 +76,6 @@ public class GauntletHistoryPlugin extends Plugin
 
 	@Inject private Client client;
 	@Inject private ClientToolbar clientToolbar;
-	@Inject private ItemManager itemManager;
 	@Inject private EventBus eventBus;
 	@Inject private PerformanceTracker performanceTracker;
 	@Inject private SessionManager sessionManager;
@@ -270,9 +264,8 @@ public class GauntletHistoryPlugin extends Plugin
 	}
 
 	// -------------------------------------------------------------------------
-	// Kill / loot / death / KC
+	// Kill / death / KC / times
 	// -------------------------------------------------------------------------
-
 
 	@Subscribe
 	public void onActorDeath(ActorDeath event)
@@ -303,62 +296,6 @@ public class GauntletHistoryPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onLootReceived(LootReceived event)
-	{
-		log.debug("LootReceived: name='{}' type={} items={}", event.getName(), event.getType(), event.getItems().size());
-		GauntletSession current = sessionManager.current();
-		if (current == null || !inGauntlet)
-		{
-			return;
-		}
-		// Chest loot is attributed to the boss NPC: "Crystal Hunllef" or "Corrupted Hunllef"
-		String name = event.getName() != null ? event.getName() : "";
-		if (!name.contains("Hunllef"))
-		{
-			log.debug("LootReceived ignored (not Hunllef): '{}'", name);
-			return;
-		}
-		recordLoot(event.getItems());
-	}
-
-	@Subscribe
-	public void onServerNpcLoot(ServerNpcLoot event)
-	{
-		if (event.getComposition() == null || event.getComposition().getName() == null)
-		{
-			return;
-		}
-		String npcName = event.getComposition().getName();
-		log.debug("ServerNpcLoot: npc='{}' items={}", npcName, event.getItems().size());
-		GauntletSession current = sessionManager.current();
-		if (current == null || !inGauntlet)
-		{
-			return;
-		}
-		// Only capture chest loot from the boss — ignore prep-phase NPC drops
-		if (!npcName.contains("Hunllef"))
-		{
-			return;
-		}
-		recordLoot(event.getItems());
-	}
-
-	private void recordLoot(Collection<ItemStack> items)
-	{
-		GauntletSession current = sessionManager.current();
-		if (current == null)
-		{
-			return;
-		}
-		for (ItemStack item : items)
-		{
-			String name = itemManager.getItemComposition(item.getId()).getName();
-			current.loot.add(new GauntletSession.LootItem(item.getId(), name, item.getQuantity()));
-			log.debug("Loot recorded: {} x {}", item.getQuantity(), name);
-		}
-	}
-
-	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
 		GauntletSession current = sessionManager.current();
@@ -368,7 +305,7 @@ public class GauntletHistoryPlugin extends Plugin
 		}
 
 		// Strip color/link tags — raw messages contain e.g. <col=ff>text</col>
-		// which breaks digit-based regex patterns and player-name comparisons.
+		// which breaks digit-based regex patterns.
 		final String msg = Text.removeTags(event.getMessage());
 
 		Matcher kc = KC_PATTERN.matcher(msg);
@@ -392,7 +329,6 @@ public class GauntletHistoryPlugin extends Plugin
 			current.fightTimeMs = parseTimeMs(pf.group(3), pf.group(4));
 			log.debug("Prep: {}ms  Fight: {}ms", current.prepTimeMs, current.fightTimeMs);
 		}
-
 	}
 
 	private static long parseTimeMs(String minutes, String seconds)

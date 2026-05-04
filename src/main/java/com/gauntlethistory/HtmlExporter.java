@@ -235,7 +235,6 @@ class HtmlExporter
 			{"Prep Time", "num"},
 			{"Fight Time", "num"},
 			{"Total Time", "num"},
-			{"Loot", "str"},
 			{"Performance", null}
 		};
 		for (int c = 0; c < cols.length; c++)
@@ -309,22 +308,6 @@ class HtmlExporter
 			tdNum(sb, prepMs, formatMs(prepMs));
 			tdNum(sb, fightMs, formatMs(fightMs));
 			tdNum(sb, totalMs, formatMs(totalMs));
-
-			// Loot
-			sb.append("<td class=\"loot\">");
-			if (s.loot.isEmpty())
-			{
-				sb.append("—");
-			}
-			else
-			{
-				for (GauntletSession.LootItem item : s.loot)
-				{
-					sb.append(escape(item.quantity > 1 ? item.quantity + "x " + item.name : item.name))
-						.append("<br>");
-				}
-			}
-			sb.append("</td>");
 
 			// Performance
 			sb.append("<td class=\"perf\">");
@@ -631,8 +614,7 @@ class HtmlExporter
 			+ ".kill { color: #5af542; font-weight: bold; }\n"
 			+ ".death { color: #f55142; font-weight: bold; }\n"
 			+ ".incomplete { color: #888; }\n"
-			+ ".loot { font-size: 12px; line-height: 1.5; }\n"
-			+ ".perf { font-size: 11px; color: #aaa; }\n"
+				+ ".perf { font-size: 11px; color: #aaa; }\n"
 			+ ".perf-inner { border-collapse: collapse; font-size: 11px; width: 100%; }\n"
 			+ ".perf-inner td { padding: 1px 4px; border: none; color: #aaa; background: transparent; }\n"
 			+ ".perf-inner td:last-child { text-align: right; color: #c8c8c8; }\n"
