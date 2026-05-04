@@ -109,7 +109,6 @@ class GauntletHistoryPanel extends PluginPanel
 		header.add(colLabel("Date", true));
 		header.add(colLabel("Type", true));
 		header.add(colLabel("Result", true));
-		header.add(colLabel("KC", true));
 		sessionListPanel.add(header);
 
 		int shown = Math.min(sessions.size(), 50);
@@ -151,8 +150,6 @@ class GauntletHistoryPanel extends PluginPanel
 			resultLabel.setForeground(resultColor);
 			row.add(resultLabel);
 
-			row.add(colLabel(s.killCount > 0 ? String.valueOf(s.killCount) : "—", false));
-
 			sessionListPanel.add(row);
 		}
 
@@ -163,7 +160,7 @@ class GauntletHistoryPanel extends PluginPanel
 
 	private JPanel rowPanel(boolean evenRow)
 	{
-		JPanel row = new JPanel(new GridLayout(1, 4));
+		JPanel row = new JPanel(new GridLayout(1, 3));
 		row.setBackground(evenRow ? new Color(0x1E1E1E) : new Color(0x252525));
 		row.setBorder(BorderFactory.createEmptyBorder(3, 4, 3, 4));
 		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
